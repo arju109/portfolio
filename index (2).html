@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather App | Arju</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <a href="../index.html" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Portfolio
+  </a>
+
+  <div class="app-container">
+    <div class="app-card">
+      <div class="app-header">
+        <i class="fa-solid fa-cloud-sun app-icon"></i>
+        <h1>Weather App</h1>
+        <p>Get real-time weather for any city</p>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="cityInput"
+          placeholder="Enter city name..."
+          autocomplete="off"
+        />
+        <button id="searchBtn" aria-label="Search weather">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </div>
+
+      <div id="error" class="error-msg" role="alert" aria-live="polite"></div>
+      <div id="loader" class="loader" style="display:none">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      </div>
+
+      <div id="weatherResult" class="weather-result" style="display:none">
+        <div class="weather-top">
+          <div>
+            <h2 id="cityName">--</h2>
+            <p id="countryName" class="country">--</p>
+          </div>
+          <img id="weatherIcon" src="" alt="Weather icon" />
+        </div>
+        <div class="temp-display">
+          <span id="temp">--</span>
+          <span class="unit">°C</span>
+        </div>
+        <p id="description" class="description">--</p>
+        <div class="weather-details">
+          <div class="detail-card">
+            <i class="fa-solid fa-droplet"></i>
+            <span id="humidity">--%</span>
+            <small>Humidity</small>
+          </div>
+          <div class="detail-card">
+            <i class="fa-solid fa-wind"></i>
+            <span id="wind">-- km/h</span>
+            <small>Wind Speed</small>
+          </div>
+          <div class="detail-card">
+            <i class="fa-solid fa-eye"></i>
+            <span id="feels">--°C</span>
+            <small>Feels Like</small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ IMPORTANT: Replace with your real OpenWeatherMap API key
+    // Get a free key at https://openweathermap.org/api
+    // NEVER commit a real key to a public repo — use a backend proxy for production
+    const API_KEY = 'YOUR_API_KEY_HERE';
+
+    const cityInput = document.getElementById('cityInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const errorEl = document.getElementById('error');
+    const loaderEl = document.getElementById('loader');
+    const resultEl = document.getElementById('weatherResult');
+
+    async function getWeather() {
+      const city = cityInput.value.trim();
+      if (!city) {
+        showError('Please enter a city name.');
+        return;
+      }
+
+      // Reset UI
+      errorEl.textContent = '';
+      resultEl.style.display = 'none';
+      loaderEl.style.display = 'block';
+      searchBtn.disabled = true;
+
+      try {
+        const res = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`
+        );
+
+        if (!res.ok) {
+          if (res.status === 404) throw new Error('City not found. Please check the spelling.');
+          if (res.status === 401) throw new Error('Invalid API key. Please check your configuration.');
+          throw new Error(`Something went wrong (status ${res.status}). Try again.`);
+        }
+
+        const data = await res.json();
+        displayWeather(data);
+
+      } catch (err) {
+        showError(err.message || 'Network error. Check your internet connection.');
+      } finally {
+        loaderEl.style.display = 'none';
+        searchBtn.disabled = false;
+      }
+    }
+
+    function displayWeather(data) {
+      document.getElementById('cityName').textContent = data.name;
+      document.getElementById('countryName').textContent = data.sys.country;
+      document.getElementById('temp').textContent = Math.round(data.main.temp);
+      document.getElementById('description').textContent =
+        data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1);
+      document.getElementById('humidity').textContent = data.main.humidity + '%';
+      document.getElementById('wind').textContent = Math.round(data.wind.speed * 3.6) + ' km/h';
+      document.getElementById('feels').textContent = Math.round(data.main.feels_like) + '°C';
+
+      const iconCode = data.weather[0].icon;
+      document.getElementById('weatherIcon').src =
+        `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+      resultEl.style.display = 'block';
+    }
+
+    function showError(msg) {
+      errorEl.textContent = '⚠️ ' + msg;
+      resultEl.style.display = 'none';
+    }
+
+    searchBtn.addEventListener('click', getWeather);
+    cityInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') getWeather();
+    });
+  </script>
+
+</body>
+</html>

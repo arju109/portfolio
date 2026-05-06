@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do App | Arju</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <a href="../index.html" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Portfolio
+  </a>
+
+  <div class="app-container">
+    <div class="app-card">
+
+      <div class="app-header">
+        <i class="fa-solid fa-list-check app-icon"></i>
+        <h1>To-Do App</h1>
+        <p>Stay organised. Get things done.</p>
+      </div>
+
+      <div class="input-row">
+        <input type="text" id="taskInput" placeholder="Add a new task..." maxlength="80" autocomplete="off" />
+        <button id="addBtn" aria-label="Add task">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+      <p class="input-error" id="inputError"></p>
+
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="done">Done</button>
+      </div>
+
+      <ul id="taskList" class="task-list"></ul>
+
+      <div class="list-footer">
+        <span id="taskCount">0 tasks left</span>
+        <button id="clearDone">Clear Completed</button>
+      </div>
+
+      <div class="empty-state" id="emptyState" style="display:none">
+        <i class="fa-regular fa-clipboard"></i>
+        <p>No tasks yet. Add one above!</p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem('arju-tasks')) || [];
+    let currentFilter = 'all';
+
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskList = document.getElementById('taskList');
+    const taskCount = document.getElementById('taskCount');
+    const emptyState = document.getElementById('emptyState');
+    const inputError = document.getElementById('inputError');
+
+    function saveTasks() {
+      localStorage.setItem('arju-tasks', JSON.stringify(tasks));
+    }
+
+    function getFiltered() {
+      if (currentFilter === 'active') return tasks.filter(t => !t.done);
+      if (currentFilter === 'done')   return tasks.filter(t => t.done);
+      return tasks;
+    }
+
+    function render() {
+      taskList.innerHTML = '';
+      const filtered = getFiltered();
+
+      filtered.forEach((task) => {
+        const li = document.createElement('li');
+        li.className = 'task-item' + (task.done ? ' done' : '');
+        li.innerHTML = `
+          <button class="check-btn" aria-label="Toggle complete" data-id="${task.id}">
+            <i class="fa-solid ${task.done ? 'fa-circle-check' : 'fa-circle'}"></i>
+          </button>
+          <span class="task-text">${escapeHTML(task.text)}</span>
+          <button class="delete-btn" aria-label="Delete task" data-id="${task.id}">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        `;
+        taskList.appendChild(li);
+      });
+
+      // Counts
+      const remaining = tasks.filter(t => !t.done).length;
+      taskCount.textContent = remaining === 1 ? '1 task left' : `${remaining} tasks left`;
+
+      // Empty state
+      emptyState.style.display = filtered.length === 0 ? 'block' : 'none';
+      taskList.style.display  = filtered.length === 0 ? 'none' : 'block';
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) {
+        inputError.textContent = 'Please enter a task.';
+        taskInput.focus();
+        return;
+      }
+      inputError.textContent = '';
+      tasks.unshift({ id: Date.now(), text, done: false });
+      saveTasks();
+      taskInput.value = '';
+      render();
+    }
+
+    taskList.addEventListener('click', (e) => {
+      const checkBtn = e.target.closest('.check-btn');
+      const deleteBtn = e.target.closest('.delete-btn');
+
+      if (checkBtn) {
+        const id = Number(checkBtn.dataset.id);
+        const task = tasks.find(t => t.id === id);
+        if (task) { task.done = !task.done; saveTasks(); render(); }
+      }
+
+      if (deleteBtn) {
+        const id = Number(deleteBtn.dataset.id);
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        render();
+      }
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    document.getElementById('clearDone').addEventListener('click', () => {
+      tasks = tasks.filter(t => !t.done);
+      saveTasks();
+      render();
+    });
+
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    render();
+  </script>
+
+</body>
+</html>

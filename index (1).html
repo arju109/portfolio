@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz App | Arju</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <a href="../index.html" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Portfolio
+  </a>
+
+  <div class="app-container">
+    <div class="app-card" id="quizCard">
+
+      <!-- QUIZ HEADER -->
+      <div class="quiz-header">
+        <span class="quiz-badge"><i class="fa-solid fa-circle-question"></i> Quiz</span>
+        <div class="progress-info">
+          <span id="questionNum">1 / 10</span>
+          <span id="scoreDisplay">Score: 0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- QUESTION SCREEN -->
+      <div id="questionScreen">
+        <p class="question-text" id="questionText">Loading...</p>
+        <div class="options-grid" id="optionsGrid"></div>
+        <p class="feedback-text" id="feedbackText"></p>
+        <button class="btn-next" id="nextBtn" style="display:none">
+          Next <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- RESULT SCREEN -->
+      <div id="resultScreen" style="display:none">
+        <div class="result-icon" id="resultIcon"></div>
+        <h2 id="resultTitle">Quiz Complete!</h2>
+        <p id="resultSub"></p>
+        <div class="result-score">
+          <span id="finalScore">0</span>
+          <span class="result-total" id="resultTotal">/ 10</span>
+        </div>
+        <p id="resultMsg" class="result-msg"></p>
+        <button class="btn-restart" id="restartBtn">
+          <i class="fa-solid fa-rotate-right"></i> Play Again
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "What does HTML stand for?", options: ["Hyper Text Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Logic", "Home Tool Markup Language"], answer: 0 },
+      { q: "Which CSS property controls text size?", options: ["text-size", "font-style", "font-size", "text-weight"], answer: 2 },
+      { q: "Which symbol is used for comments in JavaScript?", options: ["<!-- -->", "/* */", "// or /* */", "## "], answer: 2 },
+      { q: "What does CSS stand for?", options: ["Computer Style Sheets", "Cascading Style Sheets", "Creative Style System", "Colorful Style Sheets"], answer: 1 },
+      { q: "Which HTML tag is used for the largest heading?", options: ["<h6>", "<head>", "<heading>", "<h1>"], answer: 3 },
+      { q: "Which method adds an element to the end of an array in JS?", options: ["push()", "pop()", "append()", "add()"], answer: 0 },
+      { q: "What does API stand for?", options: ["App Programming Interface", "Application Protocol Integration", "Application Programming Interface", "Advanced Programming Index"], answer: 2 },
+      { q: "Which CSS display value makes elements sit side by side?", options: ["block", "inline-block", "flex", "Both B and C"], answer: 3 },
+      { q: "What is the correct way to declare a variable in modern JS?", options: ["var x = 5", "let x = 5", "const x = 5", "Both B and C"], answer: 3 },
+      { q: "Which tag links an external CSS file in HTML?", options: ["<style>", "<css>", "<link>", "<script>"], answer: 2 }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionText = document.getElementById('questionText');
+    const optionsGrid = document.getElementById('optionsGrid');
+    const feedbackText = document.getElementById('feedbackText');
+    const nextBtn = document.getElementById('nextBtn');
+    const questionNum = document.getElementById('questionNum');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const progressFill = document.getElementById('progressFill');
+    const questionScreen = document.getElementById('questionScreen');
+    const resultScreen = document.getElementById('resultScreen');
+
+    function loadQuestion() {
+      answered = false;
+      feedbackText.textContent = '';
+      nextBtn.style.display = 'none';
+
+      const q = questions[current];
+      questionText.textContent = q.q;
+      questionNum.textContent = `${current + 1} / ${questions.length}`;
+      progressFill.style.width = `${((current) / questions.length) * 100}%`;
+
+      optionsGrid.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => checkAnswer(i, btn));
+        optionsGrid.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, btn) {
+      if (answered) return;
+      answered = true;
+
+      const correct = questions[current].answer;
+      const allBtns = optionsGrid.querySelectorAll('.option-btn');
+
+      allBtns.forEach(b => b.disabled = true);
+
+      if (selected === correct) {
+        btn.classList.add('correct');
+        feedbackText.textContent = '✅ Correct!';
+        feedbackText.style.color = '#4ade80';
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[correct].classList.add('correct');
+        feedbackText.textContent = '❌ Wrong! The correct answer is highlighted.';
+        feedbackText.style.color = '#f87171';
+      }
+
+      scoreDisplay.textContent = `Score: ${score}`;
+      nextBtn.style.display = 'flex';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      current++;
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      questionScreen.style.display = 'none';
+      resultScreen.style.display = 'block';
+      progressFill.style.width = '100%';
+
+      const pct = (score / questions.length) * 100;
+      document.getElementById('finalScore').textContent = score;
+      document.getElementById('resultTotal').textContent = `/ ${questions.length}`;
+
+      let icon, title, msg;
+      if (pct >= 80) {
+        icon = '🏆'; title = 'Excellent!'; msg = "Outstanding performance! You really know your web dev!";
+      } else if (pct >= 60) {
+        icon = '👍'; title = 'Good Job!'; msg = "Solid score! Keep learning and you'll ace it next time.";
+      } else if (pct >= 40) {
+        icon = '📚'; title = 'Keep Practicing!'; msg = "Not bad for a start. Review the basics and try again!";
+      } else {
+        icon = '💪'; title = 'Keep Going!'; msg = "Every expert was once a beginner. Keep studying!";
+      }
+
+      document.getElementById('resultIcon').textContent = icon;
+      document.getElementById('resultTitle').textContent = title;
+      document.getElementById('resultSub').textContent = `You scored ${score} out of ${questions.length}`;
+      document.getElementById('resultMsg').textContent = msg;
+    }
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      current = 0;
+      score = 0;
+      answered = false;
+      scoreDisplay.textContent = 'Score: 0';
+      questionScreen.style.display = 'block';
+      resultScreen.style.display = 'none';
+      loadQuestion();
+    });
+
+    loadQuestion();
+  </script>
+
+</body>
+</html>
