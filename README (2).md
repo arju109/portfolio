@@ -6,9 +6,9 @@ A clean, responsive portfolio website built with **HTML**, **CSS**, and **JavaSc
 
 ## 🔗 Live Demo
 
-👉 [View Live on GitHub Pages](https://your-username.github.io/portfolio)
+👉 [View Live on GitHub Pages](https://arju109.github.io/portfolio)
 
-> Replace `your-username` with your actual GitHub username after deploying.
+
 
 ---
 
@@ -120,9 +120,8 @@ portfolio/
 Passionate about frontend development and building things for the web.  
 Currently looking for **internship opportunities**.
 
-📧 your@email.com  
-🔗 [LinkedIn](https://linkedin.com/in/your-profile)  
-🐙 [GitHub](https://github.com/your-username)
+📧 arju.arju@iitgn.ac.in  
+🐙 [GitHub](https://github.com/arju109)
 
 ---
 
